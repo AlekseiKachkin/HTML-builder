@@ -5,7 +5,8 @@ const path = require('path');
 const distDir = path.join(__dirname, 'project-dist')
 const assetsSrc = path.join(__dirname, 'assets');
 const assetsDst = path.join(distDir, 'assets');
-
+const destStyles = path.join(distDir, 'style.css');
+const srcStyles = path.join(__dirname, 'styles');
 async function makeDist () {
    fs.mkdir(distDir, {recursive: true}, (err) => {
     if (err) throw err;
@@ -38,6 +39,18 @@ async function copyDir(srcDir, destDir) {
 
 }
 
+async function copyStyles (srcStyles, destStyles) {
+    const files =  await fsPromises.readdir(srcStyles, {withFileTypes: true}); 
+    for(let file of files) {
+        if (file.isFile() && file.name.split('.')[1] === 'css') {  
+            const dataStyles = fs.createReadStream(path.join(srcStyles, file.name), 'utf-8');
+            dataStyles.on('data', (chunk) => {
+                fsPromises.appendFile(destStyles, chunk, 'utf-8');
+            });            
+        }
+    }  
+}
+
 makeDist();
 copyDir(assetsSrc, assetsDst);
-
+copyStyles (srcStyles, destStyles);
