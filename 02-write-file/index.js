@@ -5,6 +5,9 @@ const { stdin, stdout } = process;
 stdout.write(`Hello! I'm Alex! Write your text in console and i save it in file "the_best_message.txt"\n`);
 const wrStream = fs.createWriteStream( path.join( __dirname, 'the_best_message.txt' ));
 stdin.on('data', (chunk) => {    
+    if (chunk.toString().trim() === 'exit') {        
+        process.exit();
+    }
     wrStream.write(`${chunk}`, err => {
         if (err) throw error;
     });
@@ -21,7 +24,9 @@ process.on('SIGINT', () => {
 process.on('exit', code => {
     if (!code ) {
         console.log('\nProcess writing have finished successfully! All the best!')
+        process.exit();
     } else {
         console.log(`Oops! You have left to write  "${code}" in file!`);
+        process.exit();
     }
 })
