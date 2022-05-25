@@ -7,6 +7,8 @@ const assetsSrc = path.join(__dirname, 'assets');
 const assetsDst = path.join(distDir, 'assets');
 const destStyles = path.join(distDir, 'style.css');
 const srcStyles = path.join(__dirname, 'styles');
+const srcHTML = path.join(__dirname, 'template.html');
+const srcComponents = path.join(__dirname, 'components');
 async function makeDist () {
    fs.mkdir(distDir, {recursive: true}, (err) => {
     if (err) throw err;
@@ -39,7 +41,8 @@ async function copyDir(srcDir, destDir) {
 
 }
 
-async function copyStyles (srcStyles, destStyles) {
+async function bundleStyles (srcStyles, destStyles) {
+    fsPromises.writeFile(destStyles, '', 'utf-8',);
     const files =  await fsPromises.readdir(srcStyles, {withFileTypes: true}); 
     for(let file of files) {
         if (file.isFile() && file.name.split('.')[1] === 'css') {  
@@ -51,6 +54,24 @@ async function copyStyles (srcStyles, destStyles) {
     }  
 }
 
+async function bundleHTML (srcHTML, srcComponents, destHTML) {
+    const htmlFile = await fsPromises.readFile(srcHTML);
+
+    let htmlContent = htmlFile.toString();   
+    const components = await fsPromises.readdir(srcComponents, {withFileTypes: true});
+    for (let file of components) {
+        if (file.isFile() && file.name.split('.')[1] === 'html') {
+            let fileName = file.name.split('.')[0];            
+            let fileContent = (await fsPromises.readFile(path.join(srcComponents, file.name), 'utf-8')).toString();            
+            let placeChange = `{{${fileName}}}`;            
+            htmlContent = htmlContent.replace(placeChange, fileContent)
+        }
+    }
+
+    fsPromises.writeFile(path.join(destHTML, 'index.html'), htmlContent, 'utf-8');
+}
+
 makeDist();
 copyDir(assetsSrc, assetsDst);
-copyStyles (srcStyles, destStyles);
+bundleStyles (srcStyles, destStyles);
+bundleHTML (srcHTML, srcComponents, distDir)
